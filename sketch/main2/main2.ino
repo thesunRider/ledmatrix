@@ -153,8 +153,8 @@ void setup() {
   //mxconfig.clkphase = false;
 
   //mxconfig.clkphase = true;
-  mxconfig.latch_blanking = 2;
-  mxconfig.i2sspeed = HUB75_I2S_CFG::HZ_20M;
+  mxconfig.latch_blanking = 4;
+  mxconfig.i2sspeed = HUB75_I2S_CFG::HZ_8M;
 
   // Some matrix panels use different ICs for driving them and some of them have strange quirks.
   // If the display is not working right, try this.
