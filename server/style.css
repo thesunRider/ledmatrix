@@ -1,0 +1,27 @@
+.tiptap p {
+  margin: 1em 0;
+}
+
+.note-editable{
+  background: black;
+}
+
+
+.scroll-container {
+  width: 100%;
+  overflow-x: auto;     /* horizontal scroll */
+  white-space: nowrap;  /* prevents wrapping */
+  border: 1px solid #ccc;
+}
+
+.infinite {
+  display: inline-block;
+  background: lightblue;
+  /* grows forever as content is appended */
+}
+
+.warn_out{
+  display: hidden;
+  color: red;
+
+  }
