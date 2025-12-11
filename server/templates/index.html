@@ -11,11 +11,14 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
-  <link href="summernote-0.9.0-dist\summernote.css" rel="stylesheet">
-  <script src="summernote-0.9.0-dist\summernote.js"></script>
-  <link href="style.css" rel="stylesheet">
+  <link href="{{ url_for('static', filename='js/summernote-0.9.0-dist/summernote.css') }}" rel="stylesheet">
+  <script src= "{{ url_for('static', filename='js/summernote-0.9.0-dist/summernote.js') }}"></script> 
 
+  <link href="static/style.css" rel="stylesheet">
 
+<style type="text/css">
+  
+</style>
 
   <script>
     $(document).ready(function() {
@@ -102,6 +105,25 @@ scale:1
     img.onload = () => {
       context.drawImage(img,0,0,el.scrollWidth,el.scrollHeight,0,0,256,64);  
     };
+
+    canvas.toBlob(function(blob) {
+
+        const formData = new FormData();
+        formData.append("image", blob, "capture.png");
+
+        fetch("/upload-image", {
+            method: "POST",
+            body: formData
+        })
+        .then(r => r.json())
+        .then(resp => {
+            console.log(resp);
+            alert(resp.msg);
+        });
+
+    }, "image/png");
+
+
 });
 }
 
@@ -126,6 +148,18 @@ function displaycredits(){
 
 }
 
+function uploadanim(){
+    let input = document.createElement('input');
+  input.type = 'file';
+  input.onchange = _ => {
+    // you can use this method to get file and perform respective operations
+            let files =   Array.from(input.files);
+            console.log(files);
+        };
+  input.click();
+
+}
+
 
   </script>
 
@@ -134,12 +168,13 @@ function displaycredits(){
 
 <body>
 
-<h2>Editor & Graphic Upload </h2>
+<h2>ELAB HUB75 MATRIX DISPLAY EDITOR</h2>
 <div class="scroll-container">
   <div id="summernote" class="infinite"><p>Welcome to Elab</p></div>
 </div>
 
     <button class="btn" onclick="saveimg()">Upload Graphic</button>
+    <button class="btn" onclick="uploadanim()">Upload Animation (Bitmap zip)</button>
     <div class="preview-area">
       <canvas id="previewscrn" width="256" height="64"></canvas>
       <div class="warn_out" id="warn_cmd">
@@ -161,20 +196,20 @@ function displaycredits(){
   <!-- Section 2: Text Scroll Settings -->
   <!-- ========================= -->
   <div class="card">
-    <h2>Text Scroll Settings</h2>
+    <h2>Text Only Scroll Settings</h2>
 
-    <form action="settextdetails" class="form-grid">
+    <form action="/upload-text"  method="post" class="form-grid">
 
       <label>Text to scroll:</label>
-      <input type="text" id="textshow" value="Welcome to Elab!">
+      <input type="text" id="textshow" name="text" value="Welcome to Elab!">
 
       <label>Size of text:</label>
-      <input type="text" id="textsize" value="120">
+      <input type="text" id="textsize" name="size" value="120">
 
-      <label for="background">Text color:</label>
-      <input type="color" id="background" name="background" value="#ffffff">
+      <label for="color">Text color:</label>
+      <input type="color" id="background" name="color" value="#ffffff">
 
-      <button type="submit" class="btn">Upload Text</button>
+      <button type="submit" class="btn" formtarget="_blank">Upload Text</button>
     </form>
   </div>
 
@@ -185,7 +220,7 @@ function displaycredits(){
   <div class="card">
     <h2>Panel Configuration</h2>
 
-    <form action="alert" class="form-grid">
+    <form action="/settings" class="form-grid">
 
       <label>Update Interval / Scroll Rate:</label>
       <input type="text" id="upinterval" value="50">
@@ -199,7 +234,7 @@ function displaycredits(){
       <label>Panel Count:</label>
       <input type="text" id="pcount" value="2">
       <button type="button" onclick='displaycredits();'>Credits</button>
-      <button type="submit" class="btn">Update Settings</button>
+      <button type="submit" class="btn" formtarget="_blank">Update Settings</button>
     </form>
   </div>
 
