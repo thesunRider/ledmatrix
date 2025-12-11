@@ -8,19 +8,12 @@
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.4.1/jspdf.debug.js"></script>
   <script src="https://html2canvas.hertzen.com/dist/html2canvas.js"></script>
-
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
   <link href="summernote-0.9.0-dist\summernote.css" rel="stylesheet">
   <script src="summernote-0.9.0-dist\summernote.js"></script>
   <link href="style.css" rel="stylesheet">
-
-</head>
-<body>
-
-<div class="scroll-container">
-  <div id="summernote" class="infinite"><p>Welcome to Elab</p></div>
-</div>
-
 
 
 
@@ -28,7 +21,7 @@
     $(document).ready(function() {
         $('#summernote').summernote({
   height: 320, // set editor height
-  width: 640*2,
+  
   minHeight: 320, // set minimum height of editor
   maxHeight: 320, // set maximum height of editor
   focus: true ,// set focus to editable area after initializing summernote
@@ -72,19 +65,147 @@ setInterval(checkScrollbar, 200); // checks every 200ms
 
 
 function saveimg(){
-html2canvas(document.querySelector(".note-editing-area")).then(canvas => {
-    //document.body.appendChild(canvas)
+
+const originalScrollLeft = el.scrollLeft;
+
+// Temporarily reveal full content
+el.style.overflow = "visible";
+el.style.width = el.scrollWidth + "px";
+
+// Reset scroll to left so html2canvas sees everything
+el.scrollLeft = 0;
+
+html2canvas(el, {
+
+width: el.scrollWidth,
+height: el.scrollHeight,
+scale:1
+
+}).then(canvas => {
+    
+    el.style.overflow = "";
+    el.style.width = "";
+    el.scrollLeft = originalScrollLeft;
+
+
     var myImage = canvas.toDataURL(); //base64 png data
+    const canvas2 = document.getElementById('previewscrn'); 
+    const context = canvas2.getContext('2d'); 
     
 
+    //var newTab = window.open('about:blank','image from canvas');
+    //newTab.document.write("<img src='" + myImage + "' alt='from canvas'/>");
+
+
+    const img = new Image();
+    img.src = myImage;
+    img.onload = () => {
+      context.drawImage(img,0,0,el.scrollWidth,el.scrollHeight,0,0,256,64);  
+    };
 });
+}
+
+
+function displaycredits(){
+  Swal.fire({
+  title: "<strong>Credits</strong>",
+  icon: "info",
+  html: `
+    Made by:  
+    <a href="https://github.com/thesunRider?tab=repositories" autofocus>Suryasaradhi</a>,
+    <br>Usama
+    <br>Harris
+  `,
+  showCloseButton: true,
+  focusConfirm: false,
+  confirmButtonText: `
+    <i class="fa fa-thumbs-up"></i> Great!
+  `,
+  confirmButtonAriaLabel: "Thumbs up, great!",
+});
+
 }
 
 
   </script>
 
-<button onclick="saveimg()">Save</button>
-<div class="warn_out" id="warn_cmd">Out of bounds height detected, Fit all contents within the vertical height!</div>
+
+</head>
+
+<body>
+
+<h2>Editor & Graphic Upload </h2>
+<div class="scroll-container">
+  <div id="summernote" class="infinite"><p>Welcome to Elab</p></div>
+</div>
+
+    <button class="btn" onclick="saveimg()">Upload Graphic</button>
+    <div class="preview-area">
+      <canvas id="previewscrn" width="256" height="64"></canvas>
+      <div class="warn_out" id="warn_cmd">
+        Out of bounds height detected, Fit all contents within the vertical height!
+      </div>
+    </div>
+<div class="container">
+
+  <!-- ========================= -->
+  <!-- Section 1: Editor & Preview -->
+  <!-- ========================= -->
+    
+
+
+    
+
+
+  <!-- ========================= -->
+  <!-- Section 2: Text Scroll Settings -->
+  <!-- ========================= -->
+  <div class="card">
+    <h2>Text Scroll Settings</h2>
+
+    <form action="settextdetails" class="form-grid">
+
+      <label>Text to scroll:</label>
+      <input type="text" id="textshow" value="Welcome to Elab!">
+
+      <label>Size of text:</label>
+      <input type="text" id="textsize" value="120">
+
+      <label for="background">Text color:</label>
+      <input type="color" id="background" name="background" value="#ffffff">
+
+      <button type="submit" class="btn">Upload Text</button>
+    </form>
+  </div>
+
+
+  <!-- ========================= -->
+  <!-- Section 3: Panel Settings -->
+  <!-- ========================= -->
+  <div class="card">
+    <h2>Panel Configuration</h2>
+
+    <form action="alert" class="form-grid">
+
+      <label>Update Interval / Scroll Rate:</label>
+      <input type="text" id="upinterval" value="50">
+
+      <label>Panel width:</label>
+      <input type="text" id="pxwidth" value="64">
+
+      <label>Panel height:</label>
+      <input type="text" id="pxheight" value="32">
+
+      <label>Panel Count:</label>
+      <input type="text" id="pcount" value="2">
+      <button type="button" onclick='displaycredits();'>Credits</button>
+      <button type="submit" class="btn">Update Settings</button>
+    </form>
+  </div>
+
+</div>
+
+
 </body>
 </html>
 
