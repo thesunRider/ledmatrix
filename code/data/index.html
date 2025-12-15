@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Summernote</title>
+  <script src="/static/js/jquery-3.5.1.min.js"></script>
+
+
+  <link href="/static/js/bootstrap/bootstrap.min.css" rel="stylesheet">
+  <script src="/static/js/bootstrap/bootstrap.min.js"></script>
+
+
+  <script src="/static/js/jspdf.debug.js"></script>
+  <script src="/static/js/html2canvas.js"></script>
+  <script src="/static/js/sweetalert2@11.js"></script>
+
+
+  <link href="/static/font-awesome.min.css" rel="stylesheet">
+
+  <link href="/static/js/summernote-0.9.0-dist/summernote.css" rel="stylesheet">
+  <script src="/static/js/summernote-0.9.0-dist/summernote.js"></script>
+
+  
+  <script src="/static/js/canvastobmp.min.js"></script>
+
+  <link href="/static/style.css" rel="stylesheet">
+
+  <style type="text/css">
+
+  </style>
+
+  <script>
+    $(document).ready(function () {
+      $('#summernote').summernote({
+        height: 320, // set editor height
+
+        minHeight: 320, // set minimum height of editor
+        maxHeight: 320, // set maximum height of editor
+        focus: true,// set focus to editable area after initializing summernote
+        lineHeights: ['0.2', '0.3', '0.4', '0.5', '0.6', '0.8', '1.0', '1.2', '1.4', '1.5', '2.0', '3.0'],
+        toolbar: [
+          ['style', ['style']],
+          ['font', ['bold', 'underline', 'clear']],
+          ['fontname', ['fontname']],
+          ['fontsize', ['fontsize']],
+          ['color', ['color']],
+          ['para', ['ul', 'ol', 'paragraph']],
+          ['insert', ['picture']],
+          ['height', ['height']],
+          ,
+        ],
+
+      })
+
+
+      el = document.querySelector(".note-editable");
+      function checkScrollbar() {
+        const hasScrollbar = el.scrollHeight > el.clientHeight;
+        warn = document.querySelector(".warn_out");
+        if (hasScrollbar) {
+          console.log("Scrollbar detected!");
+          warn.style.display = "inline-block";
+          // your code here
+        } else {
+
+          warn.style.display = "none";
+        }
+      }
+
+      setInterval(checkScrollbar, 200); // checks every 200ms
+
+    });
+
+
+
+
+
+
+    function saveimg() {
+
+      const originalScrollLeft = el.scrollLeft;
+
+      // Temporarily reveal full content
+      el.style.overflow = "visible";
+      el.style.width = el.scrollWidth + "px";
+
+      // Reset scroll to left so html2canvas sees everything
+      el.scrollLeft = 0;
+
+      html2canvas(el, {
+
+        width: el.scrollWidth,
+        height: el.scrollHeight,
+        scale: 1
+
+      }).then(canvas => {
+
+        el.style.overflow = "";
+        el.style.width = "";
+        el.scrollLeft = originalScrollLeft;
+
+
+        var myImage = canvas.toDataURL(); //base64 png data
+        const canvas2 = document.getElementById('previewscrn');
+        const context = canvas2.getContext('2d');
+        
+        context.webkitImageSmoothingEnabled = false;
+        context.mozImageSmoothingEnabled = false;
+        context.imageSmoothingEnabled = false;
+        context.imageSmoothingQuality = "low";
+
+        //var newTab = window.open('about:blank','image from canvas');
+        //newTab.document.write("<img src='" + myImage + "' alt='from canvas'/>");
+
+
+        const img = new Image();
+        img.src = myImage;
+        img.onload = () => {
+          context.drawImage(img, 0, 0, el.scrollWidth, el.scrollHeight, 0, 0, 128, 32);
+
+        var canvasm = document.createElement("canvas");
+        const scale = 32 / img.height;
+        const targetWidth = img.width * scale;
+
+        canvasm.width = targetWidth;
+        canvasm.height = 32;
+
+
+        var ctx = canvasm.getContext("2d");
+        ctx.webkitImageSmoothingEnabled = false;
+        ctx.mozImageSmoothingEnabled = false;
+        ctx.imageSmoothingEnabled = false;
+        ctx.imageSmoothingQuality = "low";
+        
+        ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, targetWidth, 32);
+
+        //CanvasToBMP.toBlob(canvasm,function (blob) {
+        canvasm.toBlob(function (blob) {
+
+          const formData = new FormData();
+          formData.append("image", blob, "graphic.png");
+
+          fetch("/upload-image", {
+            method: "POST",
+            body: formData
+          })
+            .then(r => r.json())
+            .then(resp => {
+              console.log(resp);
+              alert(resp.msg);
+            });
+
+        }, "image/png");
+
+
+        };
+
+        
+
+
+      });
+    }
+
+
+    function displaycredits() {
+      Swal.fire({
+        title: "<strong>Credits</strong>",
+        icon: "info",
+        html: `
+    Made by:  
+    <a href="https://github.com/thesunRider?tab=repositories" autofocus>Suryasaradhi</a>,
+    <br>Usama
+    <br>Harris
+  `,
+        showCloseButton: true,
+        focusConfirm: false,
+        confirmButtonText: `
+    <i class="fa fa-thumbs-up"></i> Great!
+  `,
+        confirmButtonAriaLabel: "Thumbs up, great!",
+      });
+
+    }
+
+    function uploadanim() {
+      let input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/gif';
+      input.onchange = _ => {
+        const file = input.files[0];
+        if (!file) return;
+
+        if (file.type !== 'image/gif') {
+          alert("Error: Please upload a GIF file.");
+          return;
+        }
+
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+
+        img.onload = () => {
+          const REQUIRED_WIDTH = parseInt(document.getElementById("pxwidth").value) * parseInt( document.getElementById("phcount").value);  // change as needed
+          const REQUIRED_HEIGHT = parseInt(document.getElementById("pxheight").value) * parseInt( document.getElementById("pvcount").value);;   // change as needed
+
+          if (img.width !== REQUIRED_WIDTH || img.height !== REQUIRED_HEIGHT) {
+            alert(`Error: GIF must be ${REQUIRED_WIDTH}×${REQUIRED_HEIGHT}px.\nUploaded: ${img.width}×${img.height}px`);
+            URL.revokeObjectURL(url);
+            return;
+          }
+
+          console.log("Valid GIF:", file.name);
+          console.log(`Dimensions: ${img.width}x${img.height}`);
+
+          
+          const formData = new FormData();
+          formData.append("image", file, "animation.gif");
+
+          fetch("/upload-anim", {
+            method: "POST",
+            body: formData
+          })
+            .then(r => r.json())
+            .then(resp => {
+              console.log(resp);
+              alert(resp.msg);
+            });
+
+        }
+
+        img.onerror = () => {
+          alert("Error: Invalid or corrupted GIF file.");
+          URL.revokeObjectURL(url);
+        };
+
+        img.src = url;
+      };
+      input.click();
+
+    }
+
+
+  </script>
+
+
+</head>
+
+<body>
+
+  <h2>ELAB HUB75 MATRIX DISPLAY EDITOR</h2>
+  <div class="scroll-container">
+    <div id="summernote" class="infinite">
+      <p>Welcome to Elab</p>
+    </div>
+  </div>
+
+  <button class="btn" onclick="saveimg()">Upload Graphic</button>
+  <button class="btn" onclick="uploadanim()">Upload Animation (Gif)</button>
+  <div class="preview-area">
+    <canvas id="previewscrn" width="256" height="64"></canvas>
+    <div class="warn_out" id="warn_cmd">
+      Out of bounds height detected, Fit all contents within the vertical height!
+    </div>
+  </div>
+  <div class="container">
+
+    <!-- ========================= -->
+    <!-- Section 1: Editor & Preview -->
+    <!-- ========================= -->
+
+
+
+
+
+    <!-- ========================= -->
+    <!-- Section 2: Text Scroll Settings -->
+    <!-- ========================= -->
+    <div class="card">
+      <h2>Text Only Scroll Settings</h2>
+
+      <form action="/upload-text" method="post" target="transFrame" class="form-grid">
+
+        <label>Text to scroll:</label>
+        <input type="text" id="textshow" name="text" value="Welcome to Elab!">
+
+        <label for="size">Size of text:</label>
+        <select id="size" name="size">
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+        </select>
+
+        <label for="color">Text color:</label>
+        <input type="color" id="background" name="color" value="#ffffff">
+
+        <button type="submit" class="btn" onclick='alert("Uploaded Text");'>Upload Text</button>
+      </form>
+    </div>
+
+
+    <!-- ========================= -->
+    <!-- Section 3: Panel Settings -->
+    <!-- ========================= -->
+    <div class="card">
+      <h2>Panel Configuration</h2>
+
+      <form action="/settings" method="post" target="transFrame" class="form-grid">
+
+        <label>Update Interval / Scroll Rate:</label>
+        <input type="text" id="upinterval" name="upinterval" value="50">
+
+        <label>Panel width:</label>
+        <input type="text" id="pxwidth" name="pxwidth" value="64">
+
+        <label>Panel height:</label>
+        <input type="text" id="pxheight" name="pxheight" value="32">
+
+        <label>Panel Horizontal Count:</label>
+        <input type="text" id="phcount" name="phcount" value="2">
+
+        <label>Panel Veritcal Count:</label>
+        <input type="text" id="pvcount" name="pvcount" value="1">
+
+
+        <button type="button" onclick='displaycredits();'>Credits</button>
+        <button type="submit" class="btn" onclick='alert("Updated Settings");'>Update Settings</button>
+      </form>
+    </div>
+
+  </div>
+
+  <iframe style="visibility: hidden;" name="transFrame" id="transFrame"></iframe>
+
+</body>
+
+</html>

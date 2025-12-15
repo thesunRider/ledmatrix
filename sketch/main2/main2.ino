@@ -176,12 +176,7 @@ void setup() {
 
 String text = "ELAB IS OPEN WELCOME!";
 
-void loop() {
-
-  server.handleClient();
-  ElegantOTA.loop();
-
-//  http://141.99.58.241/update
+void drawText(){
 
   unsigned long now = millis();
   if (now > isAnimationDue)
@@ -206,5 +201,14 @@ void loop() {
     dma_display->print(text);
   }
 
+}
+
+void loop() {
+
+  server.handleClient();
+  ElegantOTA.loop();
+
+//  http://141.99.58.241/update
+  drawText();
 
 }
