@@ -21,7 +21,7 @@
   <link href="/static/js/summernote-0.9.0-dist/summernote.css" rel="stylesheet">
   <script src="/static/js/summernote-0.9.0-dist/summernote.js"></script>
 
-  
+
   <script src="/static/js/canvastobmp.min.js"></script>
 
   <link href="/static/style.css" rel="stylesheet">
@@ -31,14 +31,15 @@
   </style>
 
   <script>
+
+
     $(document).ready(function () {
       $('#summernote').summernote({
-        height: 320, // set editor height
-
-        minHeight: 320, // set minimum height of editor
-        maxHeight: 320, // set maximum height of editor
+        height: 320,
+        minHeight: 320,
+        maxHeight: 320,
         focus: true,// set focus to editable area after initializing summernote
-        lineHeights: ['0.2', '0.3', '0.4', '0.5', '0.6', '0.8', '1.0', '1.2', '1.4', '1.5', '2.0', '3.0'],
+        //lineHeights: ['0.2', '0.3', '0.4', '0.5', '0.6', '0.8', '1.0', '1.2', '1.4', '1.5', '2.0', '3.0'],
         toolbar: [
           ['style', ['style']],
           ['font', ['bold', 'underline', 'clear']],
@@ -80,10 +81,16 @@
     function saveimg() {
 
       const originalScrollLeft = el.scrollLeft;
+      const originalScrollTop = el.scrollTop;
 
       // Temporarily reveal full content
       el.style.overflow = "visible";
       el.style.width = el.scrollWidth + "px";
+      el.style.height = el.scrollHeight + "px";
+      el.style.minHeight = el.scrollHeight + "px";
+      el.style.maxHeight = el.scrollHeight + "px";
+      //el.style.height = el.scrollHeight + "px";
+
 
       // Reset scroll to left so html2canvas sees everything
       el.scrollLeft = 0;
@@ -100,18 +107,23 @@
         el.style.width = "";
         el.scrollLeft = originalScrollLeft;
 
+        el.style.height = "320";
+      el.style.minHeight = "320px";
+      el.style.maxHeight = "320px";
+
 
         var myImage = canvas.toDataURL(); //base64 png data
         const canvas2 = document.getElementById('previewscrn');
         const context = canvas2.getContext('2d');
-        
+
         context.webkitImageSmoothingEnabled = false;
         context.mozImageSmoothingEnabled = false;
         context.imageSmoothingEnabled = false;
         context.imageSmoothingQuality = "low";
 
-        //var newTab = window.open('about:blank','image from canvas');
-        //newTab.document.write("<img src='" + myImage + "' alt='from canvas'/>");
+
+        var newTab = window.open('about:blank', 'image from canvas');
+        newTab.document.write("<img src='" + myImage + "' alt='from canvas'/>");
 
 
         const img = new Image();
@@ -119,44 +131,44 @@
         img.onload = () => {
           context.drawImage(img, 0, 0, el.scrollWidth, el.scrollHeight, 0, 0, 128, 32);
 
-        var canvasm = document.createElement("canvas");
-        const scale = 32 / img.height;
-        const targetWidth = img.width * scale;
+          var canvasm = document.createElement("canvas");
+          const scale = 32 / img.height;
+          const targetWidth = img.width * scale;
 
-        canvasm.width = targetWidth;
-        canvasm.height = 32;
+          canvasm.width = targetWidth;
+          canvasm.height = 32;
 
 
-        var ctx = canvasm.getContext("2d");
-        ctx.webkitImageSmoothingEnabled = false;
-        ctx.mozImageSmoothingEnabled = false;
-        ctx.imageSmoothingEnabled = false;
-        ctx.imageSmoothingQuality = "low";
-        
-        ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, targetWidth, 32);
+          var ctx = canvasm.getContext("2d");
+          ctx.webkitImageSmoothingEnabled = false;
+          ctx.mozImageSmoothingEnabled = false;
+          ctx.imageSmoothingEnabled = false;
+          ctx.imageSmoothingQuality = "low";
 
-        //CanvasToBMP.toBlob(canvasm,function (blob) {
-        canvasm.toBlob(function (blob) {
+          ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, targetWidth, 32);
 
-          const formData = new FormData();
-          formData.append("image", blob, "graphic.png");
+          //CanvasToBMP.toBlob(canvasm,function (blob) {
+          canvasm.toBlob(function (blob) {
 
-          fetch("/upload-image", {
-            method: "POST",
-            body: formData
-          })
-            .then(r => r.json())
-            .then(resp => {
-              console.log(resp);
-              alert(resp.msg);
-            });
+            const formData = new FormData();
+            formData.append("image", blob, "graphic.png");
 
-        }, "image/png");
+            fetch("/upload-image", {
+              method: "POST",
+              body: formData
+            })
+              .then(r => r.json())
+              .then(resp => {
+                console.log(resp);
+                alert(resp.msg);
+              });
+
+          }, "image/png");
 
 
         };
 
-        
+
 
 
       });
@@ -200,8 +212,8 @@
         const url = URL.createObjectURL(file);
 
         img.onload = () => {
-          const REQUIRED_WIDTH = parseInt(document.getElementById("pxwidth").value) * parseInt( document.getElementById("phcount").value);  // change as needed
-          const REQUIRED_HEIGHT = parseInt(document.getElementById("pxheight").value) * parseInt( document.getElementById("pvcount").value);;   // change as needed
+          const REQUIRED_WIDTH = parseInt(document.getElementById("pxwidth").value) * parseInt(document.getElementById("phcount").value);  // change as needed
+          const REQUIRED_HEIGHT = parseInt(document.getElementById("pxheight").value) * parseInt(document.getElementById("pvcount").value);;   // change as needed
 
           if (img.width !== REQUIRED_WIDTH || img.height !== REQUIRED_HEIGHT) {
             alert(`Error: GIF must be ${REQUIRED_WIDTH}×${REQUIRED_HEIGHT}px.\nUploaded: ${img.width}×${img.height}px`);
@@ -212,7 +224,7 @@
           console.log("Valid GIF:", file.name);
           console.log(`Dimensions: ${img.width}x${img.height}`);
 
-          
+
           const formData = new FormData();
           formData.append("image", file, "animation.gif");
 

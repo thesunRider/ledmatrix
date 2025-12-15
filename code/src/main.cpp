@@ -26,11 +26,11 @@
 #include <PNGdec.h>
 
 AsyncWebServer server(80);
-// const char *ssid = "unisiegen";
-// const char *password = "eLab4Zimtsuper#sicher";
+const char *ssid_sta = "AKPU_2.4GHz";//"unisiegen";
+const char *password_sta = "Kingpin007";//"eLab4Zimtsuper#sicher";
 
-const char *ssid = "elab_hub75";
-const char *password = "elab@123";
+const char *ssid_ap = "elab_hub75";
+const char *password_ap = "elab@123";
 
 //------------------------------------------------------------------------------------------------------------------
 
@@ -236,7 +236,6 @@ int32_t GIFSeekFile(GIFFILE *pFile, int32_t iPosition)
   return pFile->iPos;
 } /* GIFSeekFile() */
 
-
 char gifpath[] = "/anim/animation.gif";
 File gifFile;
 
@@ -260,16 +259,18 @@ void ShowGIF(char *name)
 
 } /* ShowGIF() */
 
-void startgifplay(){
+void startgifplay()
+{
   gifFile = LittleFS.open(gifpath, "r");
-    if (gifFile)
-    {
-      // Show it.
-      ShowGIF(gifpath);
-    }
+  if (gifFile)
+  {
+    // Show it.
+    ShowGIF(gifpath);
+  }
 }
 
-void handlesettings(AsyncWebServerRequest *request){
+void handlesettings(AsyncWebServerRequest *request)
+{
   String upinterval = request->arg("upinterval");
   delayBetweeenAnimations = upinterval.toInt();
 }
@@ -286,7 +287,7 @@ void handleFormText(AsyncWebServerRequest *request)
 
   dma_display->fillScreen(myBLACK);
 
-  //add options if adding vertical pannel chaining
+  // add options if adding vertical pannel chaining
   if (text_size.toInt() <= 4)
     dma_display->setTextSize(text_size.toInt()); // size 2 == 16 pixels high
   dma_display->setTextWrap(false);               // N.B!! Don't wrap at end of line
@@ -301,25 +302,31 @@ void handleFormText(AsyncWebServerRequest *request)
   DISPLAY_METHOD = DISPLAY_TEXT;
 }
 
-
 // Functions to access a file on the SD card
 File pngfile;
 
-void * myOpen(const char *filename, int32_t *size) {
+void *myOpen(const char *filename, int32_t *size)
+{
   Serial.printf("Attempting to open %s\n", filename);
   pngfile = LittleFS.open(filename);
   *size = pngfile.size();
   return &pngfile;
 }
-void myClose(void *handle) {
-  if (pngfile) pngfile.close();
+void myClose(void *handle)
+{
+  if (pngfile)
+    pngfile.close();
 }
-int32_t myRead(PNGFILE *handle, uint8_t *buffer, int32_t length) {
-  if (!pngfile) return 0;
+int32_t myRead(PNGFILE *handle, uint8_t *buffer, int32_t length)
+{
+  if (!pngfile)
+    return 0;
   return pngfile.read(buffer, length);
 }
-int32_t mySeek(PNGFILE *handle, int32_t position) {
-  if (!pngfile) return 0;
+int32_t mySeek(PNGFILE *handle, int32_t position)
+{
+  if (!pngfile)
+    return 0;
   return pngfile.seek(position);
 }
 
@@ -328,43 +335,55 @@ int png_height = 0;
 int png_scroll_constant = 0;
 bool frame_complete_png = false;
 
-    // Ensure buffer large enough for PNG width
-    static uint16_t usPixels[PANEL_WIDTH_X*5]; // adjust max PNG width
-    static uint16_t dustPixels[PANEL_WIDTH_X];
-int PNGDraw(PNGDRAW *pDraw) {
+// Ensure buffer large enough for PNG width
+static uint16_t usPixels[PANEL_WIDTH_X * 5]; // adjust max PNG width
+static uint16_t dustPixels[PANEL_WIDTH_X];
+int PNGDraw(PNGDRAW *pDraw)
+{
 
-    // usPixels buffer large enough for full PNG line
-    memset(usPixels, 0, png_width * sizeof(uint16_t));
-    png.getLineAsRGB565(pDraw, usPixels, PNG_RGB565_LITTLE_ENDIAN, 0xffffffff);
+  // usPixels buffer large enough for full PNG line
+  memset(usPixels, 0, png_width * sizeof(uint16_t));
+  png.getLineAsRGB565(pDraw, usPixels, PNG_RGB565_LITTLE_ENDIAN, 0xffffffff);
 
-    // dustPixels buffer holds full panel line
-    memset(dustPixels, 0, PANEL_WIDTH_X * sizeof(uint16_t));
+  // dustPixels buffer holds full panel line
+  memset(dustPixels, 0, PANEL_WIDTH_X * sizeof(uint16_t));
 
-    for (int i = 0; i < PANEL_WIDTH_X; i++) {
-        // wrap-around scroll
-        int srcIndex = (png_scroll_constant + i) % pDraw->iWidth;
-        dustPixels[i] = usPixels[srcIndex];
+    if (png_width > PANEL_WIDTH_X)
+  {
+  for (int i = 0; i < PANEL_WIDTH_X; i++)
+  {
+    // wrap-around scroll
+    int srcIndex = (png_scroll_constant + i) % pDraw->iWidth;
+    dustPixels[i] = usPixels[srcIndex];
+  }}else{
+    for (int i = 0; i < png_width; i++)
+    {
+      dustPixels[i] = usPixels[i];
     }
-  
-    // Draw to display
-    for (int i = 0; i < PANEL_WIDTH_X; i++) {
-        dma_display->drawPixel(i, pDraw->y, dustPixels[i]);
-    }
+  }
 
-    if (png_height == PANEL_WIDTH_Y)
-        frame_complete_png = true;
+  // Draw to display
+  for (int i = 0; i < PANEL_WIDTH_X; i++)
+  {
+    dma_display->drawPixel(i, pDraw->y, dustPixels[i]);
+  }
 
-    return 1;
+  if (png_height == PANEL_WIDTH_Y)
+    frame_complete_png = true;
+
+  return 1;
 }
 
-void startpngplay(){
-   int rc = png.open("/img/graphic.png", myOpen, myClose, myRead, mySeek, PNGDraw);
-   if (rc == PNG_SUCCESS) {
+void startpngplay()
+{
+  int rc = png.open("/img/graphic.png", myOpen, myClose, myRead, mySeek, PNGDraw);
+  if (rc == PNG_SUCCESS)
+  {
     png_width = png.getWidth();
     png_height = png.getHeight();
-          Serial.printf("image specs: (%d x %d), %d bpp, pixel type: %d\n", png.getWidth(), png.getHeight(), png.getBpp(), png.getPixelType());
-          rc = png.decode(NULL, 0);
-    }
+    Serial.printf("image specs: (%d x %d), %d bpp, pixel type: %d\n", png.getWidth(), png.getHeight(), png.getBpp(), png.getPixelType());
+    rc = png.decode(NULL, 0);
+  }
 }
 
 void setup()
@@ -394,14 +413,28 @@ void setup()
   }
 
   Serial.print("Setting AP (Access Point)…");
-  WiFi.mode(WIFI_AP);
+
+  WiFi.mode(WIFI_MODE_APSTA);
+
+  WiFi.begin(ssid_sta, password_sta);
+
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    delay(500);
+    Serial.println("Connecting to WiFi..");
+  }
+
+
   // Remove the password parameter, if you want the AP (Access Point) to be open
-  WiFi.softAP(ssid);
+  WiFi.softAP(ssid_ap, password_ap);
+  
 
-  IPAddress IP = WiFi.softAPIP();
-  Serial.print("AP IP address: ");
-  Serial.println(IP);
-
+  Serial.print("ESP32 IP as soft AP: ");
+  Serial.println(WiFi.softAPIP());
+ 
+  Serial.print("ESP32 IP on the WiFi network: ");
+  Serial.println(WiFi.localIP());
+  
   // Initialize mDNS
   if (!MDNS.begin("elabhub75"))
   { // Set the hostname to "elabhub75.local"
@@ -412,6 +445,7 @@ void setup()
     }
   }
   Serial.println("mDNS responder started");
+  MDNS.addService("http", "tcp", 80);
 
   server.serveStatic("/", LittleFS, "/").setDefaultFile("index.html");
   // server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
@@ -421,19 +455,23 @@ void setup()
   server.on("/upload-text", HTTP_POST, handleFormText);
   server.on("/settings", HTTP_POST, handlesettings);
 
-  
-    // Handle POST requests for file uploads
-  server.on("/upload-image", HTTP_POST, [](AsyncWebServerRequest *request){
-    // This handler is called when the request body is fully received.
-    // We already saved the file in the onFileUpload handler.
-    if (request->hasParam("status")) {
-        Serial.println("Upload complete from HUB.");
-        request->send(200, "text/plain", "Upload successful!");
-    } else {
-        request->send(200, "text/plain", "Upload started.");
-    }
-
-  }, [](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final){
+  // Handle POST requests for file uploads
+  server.on("/upload-image", HTTP_POST, [](AsyncWebServerRequest *request)
+            {
+              // This handler is called when the request body is fully received.
+              // We already saved the file in the onFileUpload handler.
+              if (request->hasParam("status"))
+              {
+                Serial.println("Upload complete from HUB.");
+                request->send(200, "text/plain", "Upload successful!");
+              }
+              else
+              {
+                request->send(200, "text/plain", "Upload started.");
+              }
+            },
+            [](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final)
+            {
     // This is the onFileUpload handler, called as data chunks arrive.
     // It's crucial for saving the incoming file data.
 
@@ -464,23 +502,25 @@ void setup()
       png_scroll_constant = 0;
       startpngplay();
       DISPLAY_METHOD = DISPLAY_GRAPHIC;
-    }
-  });
+    } });
 
-
-
-    // Handle POST requests for file uploads
-  server.on("/upload-anim", HTTP_POST, [](AsyncWebServerRequest *request){
-    // This handler is called when the request body is fully received.
-    // We already saved the file in the onFileUpload handler.
-    if (request->hasParam("status")) {
-        Serial.println("Upload complete from HUB.");
-        request->send(200, "text/plain", "Upload successful!");
-    } else {
-        request->send(200, "text/plain", "Upload started.");
-    }
-
-  }, [](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final){
+  // Handle POST requests for file uploads
+  server.on("/upload-anim", HTTP_POST, [](AsyncWebServerRequest *request)
+            {
+              // This handler is called when the request body is fully received.
+              // We already saved the file in the onFileUpload handler.
+              if (request->hasParam("status"))
+              {
+                Serial.println("Upload complete from HUB.");
+                request->send(200, "text/plain", "Upload successful!");
+              }
+              else
+              {
+                request->send(200, "text/plain", "Upload started.");
+              }
+            },
+            [](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final)
+            {
     // This is the onFileUpload handler, called as data chunks arrive.
     // It's crucial for saving the incoming file data.
 
@@ -510,9 +550,7 @@ void setup()
       }
       startgifplay();
       DISPLAY_METHOD = DISPLAY_ANIMATION;
-    }
-  });
-
+    } });
 
   ElegantOTA.begin(&server); // Start ElegantOTA
   server.begin();
@@ -590,11 +628,11 @@ unsigned long lastGifFrame = 0;
 void loop()
 {
   ElegantOTA.loop();
-
   //  http://141.99.58.241/update
   if (DISPLAY_METHOD == DISPLAY_TEXT)
   {
-    if (gifFile){
+    if (gifFile)
+    {
       gifFile.close();
       gif.close();
     }
@@ -616,17 +654,15 @@ void loop()
   {
     unsigned long now = millis();
     if (frame_complete_png && now - lastGifFrame >= delayBetweeenAnimations && png_width > PANEL_WIDTH_X)
-      {
-        lastGifFrame = now;
-        frame_complete_png = false;
-        png_scroll_constant++;
-        if(png_scroll_constant == png_width)
-          png_scroll_constant = 0;
-           
-        png.close();
-        startpngplay();
-      } 
+    {
+      lastGifFrame = now;
+      frame_complete_png = false;
+      png_scroll_constant++;
+      if (png_scroll_constant == png_width)
+        png_scroll_constant = 0;
+
+      png.close();
+      startpngplay();
+    }
   }
 }
-
-      
